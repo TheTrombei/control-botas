@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../models/boot_model.dart';
 import '../services/storage_service.dart';
+import '../services/cloud_sync_service.dart';
 import '../widgets/progress_header.dart';
 import '../widgets/cell_dialog.dart';
+import '../widgets/cloud_sync_dialog.dart';
 
 class TableScreen extends StatefulWidget {
   final BootModel model;
@@ -30,6 +32,7 @@ class _TableScreenState extends State<TableScreen> {
   void initState() {
     super.initState();
     _model = widget.model;
+    CloudSyncService.addListener(_onCloudUpdated);
 
     _horizontalController.addListener(() {
       if (_headerScrollController.hasClients && _horizontalController.hasClients) {
@@ -48,8 +51,21 @@ class _TableScreenState extends State<TableScreen> {
     });
   }
 
+  void _onCloudUpdated(List<BootModel> updated) {
+    if (!mounted) return;
+    try {
+      final match = updated.firstWhere(
+        (m) => m.id == _model.id,
+      );
+      setState(() {
+        _model = match;
+      });
+    } catch (_) {}
+  }
+
   @override
   void dispose() {
+    CloudSyncService.removeListener(_onCloudUpdated);
     _horizontalController.dispose();
     _headerScrollController.dispose();
     super.dispose();
@@ -302,6 +318,18 @@ class _TableScreenState extends State<TableScreen> {
                         : 'Modo Parcial Activo: 1 toque abre ventana para poner — Raya con cantidad',
                   ),
                 ),
+              );
+            },
+          ),
+          IconButton(
+            tooltip: 'Sincronización en la Nube',
+            icon: const Icon(Icons.cloud_sync_outlined, color: Colors.white70),
+            onPressed: () {
+              CloudSyncDialog.show(
+                context,
+                onSyncCompleted: () {
+                  _save();
+                },
               );
             },
           ),

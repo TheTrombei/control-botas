@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/boot_model.dart';
+import 'cloud_sync_service.dart';
 
 class StorageService {
   static const String _kModelsKey = 'boot_cutting_models_v1';
@@ -17,11 +18,18 @@ class StorageService {
     }
   }
 
-  static Future<bool> saveModels(List<BootModel> models) async {
+  static Future<bool> saveModels(List<BootModel> models, {bool syncToCloud = true}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final jsonStr = BootModel.encodeList(models);
-      return await prefs.setString(_kModelsKey, jsonStr);
+      final saved = await prefs.setString(_kModelsKey, jsonStr);
+
+      if (saved && syncToCloud) {
+        // Fire and forget push to cloud
+        CloudSyncService.pushToCloud(models);
+      }
+
+      return saved;
     } catch (e) {
       return false;
     }

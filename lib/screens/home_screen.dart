@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/boot_model.dart';
 import '../services/storage_service.dart';
+import '../services/cloud_sync_service.dart';
+import '../widgets/cloud_sync_dialog.dart';
 import 'new_model_screen.dart';
 import 'table_screen.dart';
 
@@ -14,20 +16,57 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<BootModel> _models = [];
   bool _loading = true;
+  String? _cloudUrl;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _checkCloudStatus();
+    CloudSyncService.addListener(_onCloudUpdated);
+    CloudSyncService.startPolling();
+  }
+
+  @override
+  void dispose() {
+    CloudSyncService.removeListener(_onCloudUpdated);
+    super.dispose();
+  }
+
+  void _onCloudUpdated(List<BootModel> updated) {
+    if (mounted) {
+      setState(() {
+        _models = updated;
+      });
+    }
+  }
+
+  void _checkCloudStatus() async {
+    final url = await CloudSyncService.getCloudUrl();
+    if (mounted) {
+      setState(() {
+        _cloudUrl = url;
+      });
+    }
   }
 
   Future<void> _loadData() async {
     setState(() => _loading = true);
+    // First load local immediately
     final list = await StorageService.loadModels();
     setState(() {
       _models = list;
       _loading = false;
     });
+
+    // Check cloud in background
+    _checkCloudStatus();
+    final cloudList = await CloudSyncService.pullFromCloud();
+    if (cloudList != null && mounted) {
+      setState(() {
+        _models = cloudList;
+      });
+    }
   }
 
   void _openModel(BootModel model) async {
@@ -39,6 +78,16 @@ class _HomeScreenState extends State<HomeScreen> {
     if (result == true || mounted) {
       _loadData();
     }
+  }
+
+  void _openCloudDialog() {
+    CloudSyncDialog.show(
+      context,
+      onSyncCompleted: () {
+        _loadData();
+        _checkCloudStatus();
+      },
+    );
   }
 
   void _deleteModel(BootModel model) async {
@@ -59,7 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         content: Text(
           is100
-              ? 'Has completado el 100% de "${model.name}". Al borrarlo se eliminará de la memoria del dispositivo.'
+              ? 'Has completado el 100% de "${model.name}". Al borrarlo se eliminará de la memoria de todos los dispositivos conectados.'
               : 'El modelo "${model.name}" tiene un ${model.progressPercentInt}% completado. ¿Seguro que deseas eliminarlo?',
         ),
         actions: [
@@ -85,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Modelo "${model.name}" eliminado de la memoria'),
+            content: Text('Modelo "${model.name}" eliminado'),
             backgroundColor: Colors.brown.shade800,
           ),
         );
@@ -95,6 +144,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isCloudActive = _cloudUrl != null && _cloudUrl!.isNotEmpty;
+
     return Scaffold(
       appBar: AppBar(
         title: const Row(
@@ -110,6 +161,33 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: const Color(0xFF3E2723),
         foregroundColor: Colors.white,
         actions: [
+          // Cloud Sync button
+          IconButton(
+            tooltip: isCloudActive ? 'Nube Activa (Sincronizado)' : 'Conectar Nube para Compartir',
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(
+                  isCloudActive ? Icons.cloud_done : Icons.cloud_outlined,
+                  color: isCloudActive ? Colors.greenAccent : Colors.white70,
+                ),
+                if (isCloudActive)
+                  Positioned(
+                    right: -2,
+                    top: -2,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Colors.greenAccent,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            onPressed: _openCloudDialog,
+          ),
           IconButton(
             tooltip: 'Actualizar lista',
             icon: const Icon(Icons.refresh),
