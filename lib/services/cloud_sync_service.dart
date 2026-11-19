@@ -7,6 +7,7 @@ import 'storage_service.dart';
 
 class CloudSyncService {
   static const String _kCloudUrlKey = 'boot_cloud_sync_url_v1';
+  static const String defaultFirebaseUrl = 'https://taller-botas-default-rtdb.firebaseio.com';
 
   static Timer? _pollingTimer;
   static bool isSyncing = false;
@@ -32,10 +33,14 @@ class CloudSyncService {
     }
   }
 
-  // Get current cloud URL
+  // Get current cloud URL (defaults to defaultFirebaseUrl)
   static Future<String?> getCloudUrl() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kCloudUrlKey);
+    final custom = prefs.getString(_kCloudUrlKey);
+    if (custom != null && custom.isNotEmpty) {
+      return custom;
+    }
+    return defaultFirebaseUrl;
   }
 
   // Set current cloud URL

@@ -7715,12 +7715,15 @@ this.c=c},
 aKf(a){var s,r,q,p
 for(r=$.lI.length,q=0;q<$.lI.length;$.lI.length===r||(0,A.w)($.lI),++q){s=$.lI[q]
 try{s.$1(a)}catch(p){}}},
-ob(){var s=0,r=A.N(t.ob),q,p
+ob(){var s=0,r=A.N(t.ob),q,p,o
 var $async$ob=A.O(function(a,b){if(a===1)return A.K(b,r)
-for(;;)switch(s){case 0:p=A
+for(;;)switch(s){case 0:o=A
 s=3
 return A.H(A.q3(),$async$ob)
-case 3:q=p.cD(b.a.h(0,"boot_cloud_sync_url_v1"))
+case 3:p=o.cD(b.a.h(0,"boot_cloud_sync_url_v1"))
+if(p!=null&&p.length!==0){q=p
+s=1
+break}q="https://taller-botas-default-rtdb.firebaseio.com"
 s=1
 break
 case 1:return A.L(q,r)}})
