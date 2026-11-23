@@ -16,10 +16,11 @@ Aplicación desarrollada en **Flutter** para **Android** y **Web** para el contr
    - **Hombre**: Puntos del **5 al 30 con medios puntos** (5.0 a 30.0), con accesos rápidos a puntos comerciales (25 al 30).
    - Sin escritura manual: toca los chips de los puntos y asigna la cantidad de pares por punto o aplica una cantidad general a todos.
 
-3. **Tablero de Corte (11 Componentes)**:
+3. **Tablero de Corte (12 Componentes)**:
    - **Chinela y talón**
    - **Tubos**
    - **Forro**
+   - **Etiqueta**
    - **Ormas**
    - **Cartón**
    - **Planta**

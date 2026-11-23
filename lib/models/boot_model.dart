@@ -4,6 +4,7 @@ const List<String> kBootComponents = [
   'Chinela y talón',
   'Tubos',
   'Forro',
+  'Etiqueta',
   'Ormas',
   'Cartón',
   'Planta',
@@ -24,7 +25,9 @@ class BootSizeRow {
     required this.size,
     required this.quantity,
     Map<String, int>? progress,
-  }) : progress = progress ?? {for (var c in kBootComponents) c: 0};
+  }) : progress = progress != null
+            ? ({for (var c in kBootComponents) c: progress[c] ?? 0})
+            : {for (var c in kBootComponents) c: 0};
 
   String get formattedSize {
     if (size % 1 == 0) {
@@ -111,6 +114,9 @@ class BootSizeRow {
       for (var entry in rawP.entries) {
         pMap[entry.key] = (entry.value as num).toInt();
       }
+    }
+    for (var c in kBootComponents) {
+      pMap.putIfAbsent(c, () => 0);
     }
     return BootSizeRow(
       size: (json['size'] as num).toDouble(),
